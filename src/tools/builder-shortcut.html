@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <title>图标代码生成器</title>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        * {
+            font-family: "Microsoft YaHei", 微软雅黑, "MicrosoftJhengHei", 华文细黑, STHeiti, MingLiu;
+        }
+
+        #preview {
+            background-color: #283961;
+            padding-left: 20px;
+            width: 260px;
+            float: left;
+            min-height: 10px;
+            height:520px;
+            overflow: auto;
+        }
+        #control{
+            float: left;
+            margin-left: 2em;
+        }
+
+        .shortcut{
+            width: 80px;
+            overflow: hidden;
+            cursor: pointer;
+            padding: 0;
+        }
+        .shortcut:hover{
+            background-color: rgba(255, 255, 255, 0.11);
+        }
+        .icon {
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+            margin: 0 auto;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            text-align: center;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            display: block;
+            font-size: 37px;
+            line-height: 50px;
+        }
+
+        .title{
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            line-height: 18px;
+            margin-bottom: 5px;
+        }
+
+        .color-block {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.5s;
+            position: relative;
+            bottom: 0;
+        }
+
+        .color-block:hover {
+            bottom: 5px;
+        }
+
+        .code {
+            margin-top: 20px;
+            height: 180px;
+            border-radius: 5px;
+            resize: none;
+            font-size: 14px;
+            width: 300px;
+            word-break: break-all;
+            border: 1px solid gray;
+            padding: 10px;
+            background: #f2f2f2;
+            color: #02534b;
+            display: block;
+        }
+        button{
+            display: inline-block;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 18px;
+            background-color: #3399FF;
+            color: #fff;
+            white-space: nowrap;
+            text-align: center;
+            font-size: 14px;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            /*
+            opacity: .9;
+            filter: alpha(opacity=90);*/
+        }
+        input{
+            padding: 0 0.5em;
+            margin-left: 1em;
+        }
+
+        .black-green {
+            background: #009688
+        }
+
+        .green {
+            background: #5FB878
+        }
+
+        .black {
+            background: #393D49
+        }
+
+        .blue {
+            background: #1E9FFF
+        }
+
+        .orange {
+            background: #F7B824
+        }
+
+        .red {
+            background: #FF5722
+        }
+
+        .dark {
+            background: #2F4056
+        }
+
+        .purple {
+            background: #b074e6
+        }
+    </style>
+</head>
+<body>
+<div id="builder">
+    <div id="preview">
+        <div v-for="item in list" @click="click_item(item)" class="shortcut"
+             v-bind:title="item.index">
+            <i v-if="item.type==='font'" class="icon fa fa-fw " v-bind:class="item.class_font"></i>
+            <img v-if="item.type==='img'" class="icon" v-bind:src="item.img"/>
+            <div class="title">{{item.title}}</div>
+        </div>
+    </div>
+    <div id="control">
+        <h2 v-show="!active">点击左侧图标详细配置</h2>
+        <button @click="add_item">末尾新增</button>
+        <button @click="delete_all">全部删除</button>
+        <hr/>
+        <div v-if="active" id="panel">
+            <p>当前选中：No.{{active.index}}</p>
+            <button @click="add_next">下一项新增</button>
+            <button @click="delete_item">删除当前</button>
+            <p>
+                <label>菜单项文字</label><input v-model="active.title">
+            </p>
+            <p>
+                <label><input v-model="active.type" type="radio" value="font"> 字体图标</label>
+                <label><input v-model="active.type" type="radio" value="img"> 图片图标</label>
+            </p>
+            <div v-show="active.type==='font'">
+                <p>
+                    <label><a target="_blank" href="http://fontawesome.dashgame.com/">字体图标</a>名</label> <input @keyup="font_change(active.font)" v-bind:disabled="active.type!=='font'"
+                                                v-model="active.font">
+                </p>
+                <div class="color-blocks">
+                    <div v-for="color in colors" @click="color_block_click(color)" class="color-block"
+                         v-bind:class="color.class"></div>
+                </div>
+            </div>
+
+            <p v-show="active.type==='img'">
+                <label>图片地址</label> <input v-bind:disabled="active.type!=='img'" v-model="active.img">
+            </p>
+        </div>
+        <textarea class="code" v-model="code" disabled></textarea>
+    </div>
+    <div style="clear: both"></div>
+</div>
+<script>
+    var builder = new Vue({
+        el: '#builder',
+        data: {
+            index: 1,
+            list: [],
+            active: undefined,
+            code: '<!-- hello world -->',
+            colors: {
+                'black-green': {'class': {'black-green': true}},
+                green: {'class': {'green': true}},
+                black: {'class': {'black': true}},
+                blue: {'class': {'blue': true}},
+                orange: {'class': {'orange': true}},
+                red: {'class': {'red': true}},
+                dark: {'class': {'dark': true}},
+                purple: {'class': {'purple': true}},
+            }
+        },
+        methods: {
+            get_new_index: function () {
+                return this.index++;
+            },
+            add_item: function () {
+                this.list.push(this.factory_item(this.get_new_index()));
+            },
+            add_next: function () {
+                var i = -1;
+                while (this.list[++i].index !== this.active.index) {
+                }
+                this.list.splice(i + 1, 0, this.factory_item(this.get_new_index()))
+            },
+            click_item: function (item) {
+                this.active = item;
+            },
+            factory_item: function (index) {
+                return {
+                    index: index,
+                    title: index,
+                    type: 'font',// font/img
+                    font: 'star',
+                    font_class_name: 'fa-star',
+                    font_color_name: 'black-green',
+                    class_font: {
+                        'fa-star': true,
+                        'black-green': true,
+                    },
+                    img: 'http://win10ui.yuri2.cn/src/img/icon/win10.png',
+                }
+            },
+            font_change: function (val) {
+                this.active.font_class_name = 'fa-' + val;
+                this.update_class_font();
+            },
+            color_block_click: function (color) {
+                for (var i in color.class) {
+                    this.active.font_color_name = i;
+                }
+                this.update_class_font();
+            },
+            update_class_font: function () {
+                var class_font = {};
+                class_font[this.active.font_color_name] = true;
+                class_font[this.active.font_class_name] = true;
+                this.active.class_font = class_font;
+            },
+            render_code: function () {
+                var code = '';
+                for (var i in this.list) {
+                    var item = this.list[i];
+                    code += '<div class="shortcut">\n';
+                    if (item.type === 'font') {
+                        code += '    <i class="icon fa fa-fw ' + item.font_class_name + ' ' + item.font_color_name + '" ></i>\n';
+                    }
+                    if (item.type === 'img') {
+                        code += '    <img class="icon" src="' + item.img + '" />\n';
+                    }
+                    code += '    <div class="title">' + item.title + '</div>\n';
+                    code += '</div>\n';
+                }
+                this.code = code;
+            },
+            delete_item:function () {
+                for(var i in this.list){
+                    if(this.list[i].index===this.active.index){
+                        this.active=null;
+                        this.list.splice(i,1);
+                        break;
+                    }
+                }
+            },
+            delete_all:function () {
+                this.list=[];
+                this.active=undefined;
+            },
+        },
+        created: function () {
+            var that = this;
+            setInterval(function () {
+                that.render_code();
+            }, 500);
+        }
+    })
+</script>
+<span style="position:fixed;right:0;bottom:0;font-size:10px;color:gray;margin:1em;">本工具由 <a target="_blank"
+                                                                                            href="http://win10ui.yuri2.cn">WIN10-UI</a> 荣誉出品</span>
+</body>
+</html>

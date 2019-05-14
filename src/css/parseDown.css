@@ -1,0 +1,78 @@
+.parse-down{
+    padding: 1em;
+}
+.parse-down * {
+    font-family: "Microsoft YaHei", 微软雅黑, "MicrosoftJhengHei", 华文细黑, STHeiti, MingLiu;
+    color: #333232;
+}
+.parse-down a{
+    text-decoration: none;
+}
+.parse-down img{
+    max-width: 600px;
+    max-height:600px;
+}
+.parse-down h1,.parse-down h2{
+    border-bottom: 1px solid #eee;
+}
+.parse-down h1,.parse-down h2,.parse-down h3,.parse-down h4,.parse-down h5,.parse-down h6{
+    color: black;
+}
+.parse-down img{
+    max-width: 100%;
+}
+.parse-down blockquote{
+    background-color: #f5f5f5;
+    border-left:0.3em solid #afafaf;
+    line-height: 1.7em;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 1em;
+    font-size: 16px;
+}
+.parse-down code{
+    background: #f6f6f6;
+    padding: 3px;
+    border-radius: 3px;
+    font-size: 14px;
+    color: #676a6b;
+    font-weight:bold;
+    border: 1px solid rgb(211, 211, 211);
+    margin: 0.5em 0;
+}
+.parse-down pre{
+    background-color: #f6f6f6;
+    margin: 0;
+    padding: 1em;
+    line-height: 1.5em;
+    font-size: 0.8em;
+    overflow: auto;
+    border: 1px solid rgb(211, 211, 211);
+    border-radius: 6px;
+
+}
+.parse-down pre code{
+    border:none;
+}
+.parse-down li{
+    line-height:1.7em;
+}
+.parse-down table{
+    border-collapse: collapse;
+    border-spacing: 0;
+    display: block;
+    width: 100%;
+    overflow: auto;
+    margin: 1em;
+}
+.parse-down table tr{
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+}
+.parse-down table thead tr ,.parse-down table tr:nth-child(2n){
+    background-color: #f8f8f8;
+}
+.parse-down table th,.parse-down table td{
+    padding: 6px 14px;
+    border: 1px solid #ddd;
+}

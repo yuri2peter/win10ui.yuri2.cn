@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <title>磁贴代码生成器</title>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.2.4.min.js"></script>
+    <style>
+        #preview{
+            width: 281px;
+            float: left;
+            height: 484px;
+            overflow-y: auto;
+            position: relative;
+        }
+        #preview .tile{
+            width: 44px;
+            height: 44px;
+            position: absolute;
+            color: white;
+            word-break: break-all;
+        }
+        #preview .block{
+            width: 44px;
+            height: 44px;
+            box-sizing: border-box;
+            float: left;
+            background-color: #CCCCCC;
+            border: 1px solid grey;
+            font-size: 10px;
+            line-height: 44px;
+            text-align: center;
+            color: transparent;
+        }
+        #preview .block.selected{
+            background-color: #b5e3b0;
+        }
+        #preview .block:hover{
+            background-color: #e3e3e3;
+            cursor: pointer;
+            color: grey;
+
+        }
+        #control{
+            float: left;
+            margin-left: 10px;
+            width: calc( 100% - 310px);
+            height: 484px;
+            overflow-y: auto;
+            /*background-color: #F2F2F2;*/
+            /*text-align:center;*/
+            font-size:1.2em;
+            opacity: 0.8;
+            filter: alpha(opacity=80);
+        }
+        #control .color-block{
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.5s;
+            position: relative;
+            bottom: 0;
+        }
+        #control .color-block:hover{
+            bottom: 5px;
+        }
+        #btn_create{
+            font-weight:bold;
+            margin: 20px 0px;
+            z-index: 10;
+        }
+        .black-green {background: #009688}
+        .green {background: #5FB878}
+        .black {background: #393D49}
+        .blue {background: #1E9FFF}
+        .orange {background: #F7B824}
+        .red {background: #FF5722}
+        .dark {background: #2F4056}
+        .purple{background:#b074e6}
+        button{
+            display: inline-block;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 18px;
+            background-color: #3399FF;
+            color: #fff;
+            white-space: nowrap;
+            text-align: center;
+            font-size: 14px;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            /*
+            opacity: .9;
+            filter: alpha(opacity=90);*/
+
+        }
+        .code{
+            margin-top:20px;
+            height:180px;
+            border-radius: 5px;
+            resize:none;
+            font-size: 14px;
+            width: calc(100% - 2em);
+            word-break: break-all;
+            border: 1px solid gray;
+            padding: 10px;
+            background: #f2f2f2;
+            color: #02534b;
+            max-width: 300px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div id="builder">
+    <div id="preview">
+        <div v-for="n in blocks" @click="handle_click_block(n)" v-bind:class="{'selected':n.selected}" v-show="visible_row>=n.y" class="block">({{n.x}},{{n.y}})</div>
+        <div v-bind:class="tile['class']" class="tile" @click="handle_click_tile(tile)" v-for="tile in tiles" v-bind:style="tile.style">No.{{tile.name}}</div>
+    </div>
+    <div id="control">
+        <p>
+            <button @click="visible_row<=11||visible_row--">-</button>
+            <button>{{visible_row}}</button>
+            <button @click="visible_row++">+</button>
+        </p>
+        <div id="btn_create">
+            <p>{{state_info}}</p>
+        </div>
+        <button v-show="tiles" @click="handle_tile_delete_all">删除所有磁贴</button>
+        <div class="tile_panel" v-show="active_tile_name!==null">
+            <p style="font-size: 14px;">当前磁贴 No.{{active_tile_name}} <button style="margin-left: 2em" @click="handle_tile_delete">删除</button></p>
+
+            <div class="color-blocks">
+                <div v-for="color in colors" @click="handle_color_block_click(color)" class="color-block" v-bind:class="color.class" ></div>
+            </div>
+        </div>
+        <textarea class="code" disabled>{{code}}</textarea>
+    </div>
+    <div style="clear: both"></div>
+</div>
+<span style="position:fixed;right:0;bottom:0;font-size:10px;color:gray;margin:1em;">本工具由 <a target="_blank" href="http://win10ui.yuri2.cn">WIN10-UI</a> 荣誉出品</span>
+<script>
+    var builder=new Vue({
+        el:document.getElementById('builder'),
+        data:{
+            index:0,
+            blocks:[],
+            tiles:{},
+            visible_row:11,
+            code:'',
+            active_tile_name:null,
+            state_create:{
+                //磁贴的状态机
+                flag:0,
+                n1:undefined,
+                n2:undefined,
+            },
+            colors:{
+                'black-green':{'class':{'black-green':true}},
+                green:{'class':{'green':true}},
+                black:{'class':{'black':true}},
+                blue:{'class':{'blue':true}},
+                orange:{'class':{'orange':true}},
+                red:{'class':{'red':true}},
+                dark:{'class':{'dark':true}},
+                purple:{'class':{'purple':true}},
+            }
+        },
+        methods:{
+            handle_click_block:function (n) {
+                var x=n.x;
+                var y=n.y;
+                switch (this.state_create.flag){
+                    case 0:
+                        this.state_create.n1=n;
+                        n.selected=true;
+                        this.state_create.flag=1;
+                        break;
+                    case 1:
+                        this.state_create.n1.selected=false;
+                        this.state_create.flag=0;
+                        var n1=this.state_create.n1;
+                        var n2=n;
+                        if(n1.x>n2.x || n1.y>n2.y){
+                            return ; //非法坐标
+                        }else{
+                            x=n1.x;y=n1.y; //左上角坐标
+                            var w=n2.x-n1.x+1;
+                            var h=n2.y-n1.y+1;
+                            var tile_name=this.get_new_index();
+                            this.$set(this.tiles,tile_name,{
+                                name:tile_name,
+                                x:x,
+                                y:y,
+                                w:w,
+                                h:h,
+                                color:'',
+                                'class':{
+                                },
+                                style:{
+                                    top:((y-1)*44)+'px',
+                                    left:((x-1)*44)+'px',
+                                    width:(w*44)+'px',
+                                    height:(h*44)+'px',
+                                    'background-color':'rgb('+Math.ceil(Math.random()*256)+','+Math.ceil(Math.random()*256)+','+Math.ceil(Math.random()*256)+')'
+                                }
+                            });
+                        }
+                        this.method_update_code();
+                        break;
+                }
+            },
+            handle_click_tile:function (n) {
+                this.active_tile_name=n.name;
+            },
+            get_new_index:function () {
+                return this.index++;
+            },
+            handle_tile_delete:function () {
+                delete this.tiles[this.active_tile_name];
+                this.active_tile_name=null;
+                this.method_update_code();
+            },
+            handle_tile_delete_all:function () {
+                this.active_tile_name=null;
+                this.tiles={};
+                this.method_update_code();
+            },
+            handle_color_block_click:function (color) {
+                var tile=this.tiles[this.active_tile_name];
+                delete tile.style['background-color'];
+//                    this.$set(tile['class'],'orange',true);
+                this.$set(tile,'class',color.class);
+                for(var i in color.class){
+                    var color_name=i;
+                }
+                this.$set(tile,'color',color_name);
+                this.method_update_code();
+            },
+            method_update_code:function () {
+                var code='';
+                for (var i in this.tiles){
+                    var tile=this.tiles[i];
+                    code+='\n'+
+                        '<div loc="'+tile.x+','+tile.y+'" size="'+tile.w+','+tile.h+'" class="block">\n'+
+                        '    <div class="content '+tile.color+'" >No.'+tile.name+'</div>\n'+
+                        '</div>\n';
+                }
+                this. code=code;
+            }
+        },
+        computed:{
+            state_info:function () {
+                switch (this.state_create.flag){
+                    case 0:return '点击磁贴配置/点击网格选择坐标';
+                    case 1:return '点击网格选择第二个坐标(已选择'+this.state_create.n1.x+','+this.state_create.n1.y+')';
+                }
+            },
+        },
+        created:function () {
+            for(var i=1;i<=6*81;i++){
+                var x=i%6;
+                if(x===0){x=6}
+                var y=Math.ceil(i/6);
+                this.blocks.push({
+                    x:x,
+                    y:y,
+                    selected:false,
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>
